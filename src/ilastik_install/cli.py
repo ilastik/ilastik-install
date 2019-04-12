@@ -52,6 +52,9 @@ def parse_args() -> Namespace:
 
 
 def main():
+    logging.basicConfig(
+        level=logging.DEBUG, format="%(asctime)s %(name)s-%(levelname)s: %(message)s"
+    )
     args = parse_args()
 
     spec_file = ".prefix_previous"
@@ -66,7 +69,9 @@ def main():
     prefix_config = PrefixConfig(spec_file, args.root)
     logger.debug(prefix_config)
 
-    core.parse_conda_meta(args.root / "conda-meta")
+    core.parse_conda_meta(
+        args.root / "conda-meta", args.root, prefix_config.prefix, args.root
+    )
 
 
 if __name__ == "__main__":
