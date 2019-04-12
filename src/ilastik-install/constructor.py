@@ -1,4 +1,9 @@
 """
+Code here was originally taken from
+    https://github.com/conda/constructor/blob/master/constructor/install.py
+
+Thus the original copyright notice:
+
 Copyright (c) 2016, Anaconda, Inc.
 All rights reserved.
 
@@ -27,11 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import re
 import sys
-import json
-import shutil
 import stat
-from os.path import abspath, dirname, exists, isdir, isfile, islink, join
-from optparse import OptionParser
+
+
+on_win = bool(sys.platform == 'win32')
 
 
 def exp_backoff_fn(fn, *args):
@@ -55,7 +59,7 @@ def exp_backoff_fn(fn, *args):
             else:
                 raise e
         else:
-return result
+            return result
 
 
 class PaddingError(Exception):
