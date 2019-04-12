@@ -43,7 +43,9 @@ def parse_conda_meta(
             fullpath = root / file_spec["_path"]
             mode = file_spec["file_mode"]
 
-            assert fullpath.exists()
+            if not fullpath.exists():
+                logger.warning(f"Could not find {fullpath.as_posix()}")
+                continue
             logger.info(f"modifying {fullpath}:{mode}")
             _constructor.update_prefix(
                 fullpath,

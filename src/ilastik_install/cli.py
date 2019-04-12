@@ -65,6 +65,8 @@ def main():
         spec_file = args.override_prefix_file
 
     spec_file = args.root / spec_file
+    if not spec_file.exists():
+        logger.error(f"Could not find spec file at {spec_file}")
 
     prefix_config = PrefixConfig(spec_file, args.root)
     logger.debug(prefix_config)
