@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ilastik-install",
-    version="0.1.0dev1",
+    version="0.1.1dev0",
     author="Dominik Kutra",
     author_email="author email address",
     license="MIT",
@@ -17,8 +17,6 @@ setup(
         # 'dep2>=2'
     ],
     entry_points={
-        "console_scripts": [
-            "ilastik-install = ilastik_install.__main__:main"
-        ]
+        "console_scripts": ["ilastik-install = ilastik_install.__main__:main"]
     },
 )
