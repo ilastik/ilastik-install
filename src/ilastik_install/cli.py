@@ -1,7 +1,7 @@
 import pathlib
 from argparse import ArgumentParser, Namespace
 import logging
-import core
+from ilastik_install import core
 import dataclasses
 
 logger = logging.getLogger(__name__)

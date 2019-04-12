@@ -1,4 +1,4 @@
-from .cli import main as cli_main
+from ilastik_install.cli import main as cli_main
 
 
 def main():

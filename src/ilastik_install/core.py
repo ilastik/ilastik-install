@@ -5,7 +5,7 @@ import json
 
 import logging
 
-from external import _constructor
+from ilastik_install.external import _constructor
 
 logger = logging.getLogger(__name__)
 
