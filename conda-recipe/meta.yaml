@@ -24,13 +24,14 @@ requirements:
 
 test:
   imports:
-    - ilastik-install
+    - ilastik_install
   source_files:
     - tests
   requires:
     - pytest
   commands:
     - pytest tests
+    - ilastik-install --help
 
 about:
   home: TODO

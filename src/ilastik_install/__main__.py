@@ -1,5 +1,8 @@
+from .cli import main as cli_main
+
+
 def main():
-    print("Implement ilastik-install's main function!")
+    cli_main()
 
 
 if __name__ == "__main__":
