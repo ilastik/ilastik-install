@@ -1,9 +1,24 @@
 import pathlib
 from argparse import ArgumentParser, Namespace
 import logging
-
+import core
+import dataclasses
 
 logger = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
+class PrefixConfig(core.JsonConfig):
+    root_path: pathlib.Path
+    clean: bool = dataclasses.field(init=False)
+    prefix: bool = dataclasses.field(init=False)
+    valid: bool = dataclasses.field(init=False)
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.valid = self.spec_path.parent == self.root_path
+        self.prefix = pathlib.Path(self.json_specs["previous_prefix"])
+        self.clean = self.valid and self.prefix == self.root_path
 
 
 def parse_args() -> Namespace:
@@ -13,13 +28,14 @@ def parse_args() -> Namespace:
     )
 
     p.add_argument(
-        "root-path",
+        "root",
         type=pathlib.Path,
         help="Root of the ilastik install (same as run_ilastik.sh).",
     )
     p.add_argument(
         "--override-prefix-file",
         type=str,
+        default="",
         help=(
             "Should normally not be used, override the prefix file that stores "
             "the previous prefix."
@@ -37,4 +53,21 @@ def parse_args() -> Namespace:
 
 def main():
     args = parse_args()
-    print(args)
+
+    spec_file = ".prefix_previous"
+    if args.override_prefix_file != "":
+        logger.warning(
+            f"Not running with default value for prefix file. Using {args.override_prefix_file} instead"
+        )
+        spec_file = args.override_prefix_file
+
+    spec_file = args.root / spec_file
+
+    prefix_config = PrefixConfig(spec_file, args.root)
+    logger.debug(prefix_config)
+
+    core.parse_conda_meta(args.root / "conda-meta")
+
+
+if __name__ == "__main__":
+    main()

@@ -6,5 +6,8 @@ dependencies:
   - black
   - pre_commit
   - bumpversion
+  - ipython
+  - mypy
+  - python >=3.7
   - pytest
 
