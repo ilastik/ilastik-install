@@ -10,3 +10,5 @@ For distribution of our binaries we follow a similar approach as the conda-folks
 * install the release environment to a very long `placeholder...` path
 * when ilastik is first started
  * could be problematic on windows, osx. But the problems mainly popped up on linux (because of `X11`)
+
+Took the code for binary/text replacement of the placeholder from [conda/constructor](https://github.com/conda/constructor).
