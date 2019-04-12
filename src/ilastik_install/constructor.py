@@ -35,7 +35,7 @@ import sys
 import stat
 
 
-on_win = bool(sys.platform == 'win32')
+on_win = bool(sys.platform == "win32")
 
 
 def exp_backoff_fn(fn, *args):
@@ -47,6 +47,7 @@ def exp_backoff_fn(fn, *args):
 
     import time
     import errno
+
     max_tries = 6  # max total time = 6.4 sec
     for n in range(max_tries):
         try:
@@ -72,14 +73,15 @@ def binary_replace(data, a, b):
     replaced with `b` and the remaining string is padded with null characters.
     All input arguments are expected to be bytes objects.
     """
+
     def replace(match):
         occurances = match.group().count(a)
         padding = (len(a) - len(b)) * occurances
         if padding < 0:
             raise PaddingError(a, b, padding)
-        return match.group().replace(a, b) + b'\0' * padding
+        return match.group().replace(a, b) + b"\0" * padding
 
-    pat = re.compile(re.escape(a) + b'([^\0]*?)\0')
+    pat = re.compile(re.escape(a) + b"([^\0]*?)\0")
     res = pat.sub(replace, data)
     assert len(res) == len(data)
     return res
@@ -89,22 +91,22 @@ def update_prefix(path, new_prefix, placeholder, mode):
     if on_win:
         # force all prefix replacements to forward slashes to simplify need
         # to escape backslashes - replace with unix-style path separators
-        new_prefix = new_prefix.replace('\\', '/')
+        new_prefix = new_prefix.replace("\\", "/")
 
     path = os.path.realpath(path)
-    with open(path, 'rb') as fi:
+    with open(path, "rb") as fi:
         data = fi.read()
-    if mode == 'text':
-        new_data = data.replace(placeholder.encode('utf-8'),
-                                new_prefix.encode('utf-8'))
-    elif mode == 'binary':
+    if mode == "text":
+        new_data = data.replace(placeholder.encode("utf-8"), new_prefix.encode("utf-8"))
+    elif mode == "binary":
         if on_win:
             # anaconda-verify will not allow binary placeholder on Windows.
             # However, since some packages might be created wrong (and a
             # binary placeholder would break the package, we just skip here.
             return
-        new_data = binary_replace(data, placeholder.encode('utf-8'),
-                                  new_prefix.encode('utf-8'))
+        new_data = binary_replace(
+            data, placeholder.encode("utf-8"), new_prefix.encode("utf-8")
+        )
     else:
         sys.exit("Invalid mode:" % mode)
 
@@ -113,6 +115,6 @@ def update_prefix(path, new_prefix, placeholder, mode):
     st = os.lstat(path)
     # unlink in case the file is memory mapped
     exp_backoff_fn(os.unlink, path)
-    with open(path, 'wb') as fo:
+    with open(path, "wb") as fo:
         fo.write(new_data)
     os.chmod(path, stat.S_IMODE(st.st_mode))

@@ -18,7 +18,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "ilastik-install = ilastik-install.__main__:main"
+            "ilastik-install = ilastik_install.__main__:main"
         ]
     },
 )
