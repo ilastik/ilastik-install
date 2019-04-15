@@ -94,21 +94,22 @@ def binary_replace(
             original_placeholder,
             new_placeholder,
         )
+    padding_current = len(original_placeholder) - len(current_placeholder)
+    padding_new = len(original_placeholder) - len(current_placeholder)
+    assert padding_current >= 0
+    assert padding_new >= 0
 
     def replace(match):
         occurances = match.group().count(current_placeholder)
         padding = (len(current_placeholder) - len(new_placeholder)) * occurances
-        print(match, occurances, padding)
-        if padding < 0:
-            raise PaddingError(current_placeholder, new_placeholder, padding)
-        result = (
-            match.group().replace(current_placeholder, new_placeholder)
-            + b"\0" * padding
-        )
-        print(result)
+        zeros = match.group().count(b"\0")
+        matchstr = match.group().rstrip(b"\0")
+        result = matchstr.replace(current_placeholder, new_placeholder)
+        result = result + b"\0" * (len(match.group()) - len(result))
+        assert len(result) == len(match.group())
         return result
 
-    pat = re.compile(re.escape(current_placeholder) + b"([^\0]*?)\0")
+    pat = re.compile(re.escape(current_placeholder) + b"([^\0]*?)\0+")
     res = pat.sub(replace, data)
 
     assert new_placeholder in res

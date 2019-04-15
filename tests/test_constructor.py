@@ -34,8 +34,9 @@ def zero_t(data: bytes) -> bytes:
     "original_prefix,current_prefix, new_prefix",
     [
         (b"this_is_a_short_placeholder", b"short_current", b"short_new"),
-        (b"AAA", b"BBB", b"CCC"),
-        (b"AAA", b"BB", b"C"),
+        (b"AAAAA", b"BBBBB", b"CCCCC"),
+        (b"AAAAA", b"BBB", b"CC"),
+        (b"AAAAA", b"BBB", b"CCCCC"),
     ],
 )
 def test_single_replace(
@@ -53,7 +54,6 @@ def test_single_replace(
         current_prefix + b"\0" * (len(original_prefix) - len(current_prefix) + 1),
         random_data,
     )
-
     assert current_prefix in random_data
     res = _constructor.binary_replace(
         random_data, original_prefix, current_prefix, new_prefix
@@ -65,8 +65,9 @@ def test_single_replace(
     "original_prefix,current_prefix, new_prefix",
     [
         (b"this_is_a_short_placeholder", b"short_current", b"short_new"),
-        (b"AAA", b"BBB", b"CCC"),
-        (b"AAA", b"BB", b"C"),
+        (b"AAAAA", b"BBBBB", b"CCCCC"),
+        (b"AAAAA", b"BBBB", b"CCC"),
+        (b"AAAAA", b"BBB", b"CCCCC"),
     ],
 )
 def test_multi_replace(
@@ -106,8 +107,9 @@ def test_multi_replace(
     "nested_with,original_prefix,current_prefix, new_prefix",
     [
         ((b"",), b"this_is_a_short_placeholder", b"short_current", b"short_new"),
-        ((b"/something/here",), b"AAA", b"BBB", b"CCC"),
-        ((b"/one/here", b"/other/one/here/yo"), b"AAA", b"BB", b"C"),
+        ((b"/something/here",), b"AAAAA", b"BBB", b"CCC"),
+        ((b"/one/here", b"/other/one/here/yo"), b"AAAAA", b"BBB", b"CC"),
+        ((b"/one/here", b"/other/one/here/yo"), b"AAAAA", b"BBB", b"CCCCC"),
     ],
 )
 def test_multi_nested_replace(
@@ -129,7 +131,7 @@ def test_multi_nested_replace(
 
     # n+1: insert the original prefix
     start_pos = random.randint(
-        random_str_len // 2, random_str_len - len(original_prefix) - 1
+        random_str_len // 2, random_str_len - repl_string_len - 1
     )
     random_data = inserted_to_binary(random_data, original_nested, start_pos)
     assert random_data.count(original_prefix) == 2 * len(nested_with)
@@ -150,7 +152,6 @@ def test_multi_nested_replace(
     assert res.count(zero_t(current_nested)) == 0
     assert res.count(zero_t(original_nested)) == 0
 
-    new_nested = current_nested.replace(current_prefix, new_prefix)
-    new_nested = new_nested + b"\0" * (len(current_nested) - len(new_nested))
-
+    new_nested = current_nested.rstrip(b"\0").replace(current_prefix, new_prefix)
+    new_nested = new_nested + b"\0" * (len(original_nested) - len(new_nested))
     assert res.count(zero_t(new_nested)) == 2

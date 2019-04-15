@@ -30,7 +30,7 @@ class PackageSpec(JsonConfig):
                 yield file_spec
 
 
-def parse_conda_meta(
+def replace_prefixes(
     conda_meta_path: pathlib.Path,
     root: pathlib.Path,
     current_placeholder: str,
