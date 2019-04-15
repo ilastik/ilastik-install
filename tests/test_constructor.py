@@ -18,10 +18,6 @@ def random_data() -> bytes:
     return random_data
 
 
-def as_encoded_bytes(some_str: str) -> bytes:
-    return some_str.encode("utf-8")
-
-
 def inserted_to_binary(data: bytes, repl: bytes, start_pos: int) -> bytes:
     """Returns data with same length and repl inserted at start_pos"""
     assert start_pos < (len(data) - len(repl))
@@ -36,13 +32,9 @@ def zero_t(data: bytes) -> bytes:
 @pytest.mark.parametrize(
     "original_prefix,current_prefix, new_prefix",
     [
-        (
-            as_encoded_bytes("this_is_a_short_placeholder"),
-            as_encoded_bytes("short_current"),
-            as_encoded_bytes("short_new"),
-        ),
-        (as_encoded_bytes("AAA"), as_encoded_bytes("BBB"), as_encoded_bytes("CCC")),
-        (as_encoded_bytes("AAA"), as_encoded_bytes("BB"), as_encoded_bytes("C")),
+        (b"this_is_a_short_placeholder", b"short_current", b"short_new"),
+        (b"AAA", b"BBB", b"CCC"),
+        (b"AAA", b"BB", b"C"),
     ],
 )
 def test_single_replace(
@@ -71,13 +63,9 @@ def test_single_replace(
 @pytest.mark.parametrize(
     "original_prefix,current_prefix, new_prefix",
     [
-        (
-            as_encoded_bytes("this_is_a_short_placeholder"),
-            as_encoded_bytes("short_current"),
-            as_encoded_bytes("short_new"),
-        ),
-        (as_encoded_bytes("AAA"), as_encoded_bytes("BBB"), as_encoded_bytes("CCC")),
-        (as_encoded_bytes("AAA"), as_encoded_bytes("BB"), as_encoded_bytes("C")),
+        (b"this_is_a_short_placeholder", b"short_current", b"short_new"),
+        (b"AAA", b"BBB", b"CCC"),
+        (b"AAA", b"BB", b"C"),
     ],
 )
 def test_multi_replace(
