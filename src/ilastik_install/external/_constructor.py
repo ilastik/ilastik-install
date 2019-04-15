@@ -98,12 +98,15 @@ def binary_replace(
     def replace(match):
         occurances = match.group().count(current_placeholder)
         padding = (len(current_placeholder) - len(new_placeholder)) * occurances
+        print(match, occurances, padding)
         if padding < 0:
             raise PaddingError(current_placeholder, new_placeholder, padding)
-        return (
+        result = (
             match.group().replace(current_placeholder, new_placeholder)
             + b"\0" * padding
         )
+        print(result)
+        return result
 
     pat = re.compile(re.escape(current_placeholder) + b"([^\0]*?)\0")
     res = pat.sub(replace, data)
