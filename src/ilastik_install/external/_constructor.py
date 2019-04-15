@@ -67,22 +67,48 @@ class PaddingError(Exception):
     pass
 
 
-def binary_replace(data, a, b):
+class PlaceholderLenghtError(Exception):
+    pass
+
+
+def binary_replace(
+    data,
+    original_placeholder: bytes,
+    current_placeholder: bytes,
+    new_placeholder: bytes,
+):
     """
-    Perform a binary replacement of `data`, where the placeholder `a` is
-    replaced with `b` and the remaining string is padded with null characters.
+    Perform a binary replacement of `data`, where the placeholder
+    `current_placeholder` is replaced with `new_placeholder` (terminated with a
+    single b"\0) and the remaining string is kept untouched.
+    `new_placeholder` may not be longer than `original_placeholder`.
     All input arguments are expected to be bytes objects.
+    |-----------------------original placeholder-----------------|somestring?|0|
+    |--------current placeholder--------|somestring?|00000000000000000000000000|
+    |------------new placeholder--------------|somestr?|00000000000000000000000|
     """
+    if len(new_placeholder) > len(original_placeholder):
+        raise PlaceholderLenghtError(
+            f"New placeholder longer (lenght: {len(new_placeholder)}) than "
+            f"old placholder (length: {len(original_placeholder)}).",
+            original_placeholder,
+            new_placeholder,
+        )
 
     def replace(match):
-        occurances = match.group().count(a)
-        padding = (len(a) - len(b)) * occurances
+        occurances = match.group().count(current_placeholder)
+        padding = (len(current_placeholder) - len(new_placeholder)) * occurances
         if padding < 0:
-            raise PaddingError(a, b, padding)
-        return match.group().replace(a, b) + b"\0" * padding
+            raise PaddingError(current_placeholder, new_placeholder, padding)
+        return (
+            match.group().replace(current_placeholder, new_placeholder)
+            + b"\0" * padding
+        )
 
-    pat = re.compile(re.escape(a) + b"([^\0]*?)\0")
+    pat = re.compile(re.escape(current_placeholder) + b"([^\0]*?)\0")
     res = pat.sub(replace, data)
+
+    assert new_placeholder in res
     assert len(res) == len(data)
     return res
 
