@@ -108,9 +108,7 @@ def test_multi_nested_replace(
     assert res.count(zero_t(new_nested)) == occurrences
 
 
-@pytest.fixture
-def random_text() -> typing.Tuple[str, str]:
-    n_lines = 2000
+def generate_random_text(random_str_len: int) -> typing.List[str]:
     prefix_count = 10
     mean_line_lenght = 80
     random_data = [
@@ -120,42 +118,42 @@ def random_text() -> typing.Tuple[str, str]:
                 k=max(0, round(random.normalvariate(mean_line_lenght, 20))),
             )
         )
-        for x in range(n_lines)
+        for x in range(random_str_len)
     ]
+    return random_data
 
-    current_prefix = "12345678"
-    lines = random.sample(range(n_lines), k=prefix_count)
+
+def random_text(random_str_len: int, current_prefix: str, occurrences: int) -> str:
+    text = generate_random_text(random_str_len)
+    lines = random.sample(range(random_str_len), k=occurrences)
     for line in lines:
-        pos = random.randint(0, len(random_data[line]))
-        random_data[line] = (
-            random_data[line][0:pos] + current_prefix + random_data[line][pos::]
-        )
+        pos = random.randint(0, len(text[line]))
+        text[line] = text[line][0:pos] + current_prefix + text[line][pos::]
 
-    return current_prefix, "\n".join(random_data)
+    return "\n".join(text)
 
 
-@pytest.fixture
-def text_file(
-    tmp_path: pathlib.Path, random_text: str
-) -> typing.Tuple[str, pathlib.Path]:
-    txt_file = tmp_path / "textfile.txt"
+@pytest.mark.parametrize(
+    "new_prefix,occurrences", [("1234", 1), ("1234567", 15), ("1234567890abcderfgh", 2)]
+)
+def test_update_prefix_text(new_prefix: str, occurrences: int, tmp_path: pathlib.Path):
+    current_prefix = "something_random"
+    original_prefix = "dontcare"
+    random_str_len = 400
+    txt = random_text(random_str_len, current_prefix, occurrences)
+    txt_file = tmp_path / "txt-file.txt"
     with txt_file.open("w") as f:
-        prefix, text = random_text
-        f.write(text)
-    return prefix, txt_file
+        f.write(txt)
 
-
-@pytest.mark.parametrize("new_prefix", ["1234", "1234567", "1234567890abcderfgh"])
-def test_update_prefix_text(new_prefix: str, text_file):
-    original_prefix: str = "norealneed"
-    current_prefix, path = text_file
     mode: str = "text"
-    _constructor.update_prefix(path, original_prefix, current_prefix, new_prefix, mode)
+    _constructor.update_prefix(
+        txt_file, original_prefix, current_prefix, new_prefix, mode
+    )
 
-    with path.open("r") as f:
+    with txt_file.open("r") as f:
         txt_out = f.read()
 
-    assert txt_out.count(new_prefix) == 10
+    assert txt_out.count(new_prefix) == occurrences
 
 
 @pytest.mark.parametrize(
