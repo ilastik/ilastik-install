@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ilastik-install",
-    version="0.1.1dev1",
+    version="0.2.0dev0",
     author="Dominik Kutra",
     author_email="author email address",
     license="MIT",
