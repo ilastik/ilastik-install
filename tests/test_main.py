@@ -1,4 +1,3 @@
-import pytest
 import json
 from json import JSONEncoder
 from ilastik_install import core

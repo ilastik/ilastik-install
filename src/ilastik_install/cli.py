@@ -51,10 +51,22 @@ def parse_args() -> Namespace:
     return args
 
 
+def setup_logging():
+    logger.setLevel(logging.DEBUG)
+    log_formatter = logging.Formatter("%(asctime)s %(name)s-%(levelname)s: %(message)s")
+    file_handler = logging.FileHandler("relocate.log")
+    file_handler.setFormatter(log_formatter)
+    file_handler.setLevel(logging.DEBUG)
+    logger.addHandler(file_handler)
+    stdout_handler = logging.StreamHandler()
+    stdout_handler.setFormatter(log_formatter)
+    stdout_handler.setLevel(logging.INFO)
+    logger.addHandler(stdout_handler)
+    logger.debug("----------Starting relocation--------")
+
+
 def main():
-    logging.basicConfig(
-        level=logging.DEBUG, format="%(asctime)s %(name)s-%(levelname)s: %(message)s"
-    )
+    setup_logging()
     args = parse_args()
 
     spec_file = ".prefix_previous"
@@ -68,6 +80,7 @@ def main():
     if not spec_file.exists():
         logger.error(f"Could not find spec file at {spec_file}")
 
+    logger.debug(f"trying {spec_file}")
     prefix_config = PrefixConfig(spec_file, args.root)
     logger.debug(prefix_config)
 
