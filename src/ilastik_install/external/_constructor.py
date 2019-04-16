@@ -94,21 +94,24 @@ def binary_replace(
             original_placeholder,
             new_placeholder,
         )
+    # sanity checks!
     padding_current = len(original_placeholder) - len(current_placeholder)
     padding_new = len(original_placeholder) - len(current_placeholder)
     assert padding_current >= 0
     assert padding_new >= 0
 
     def replace(match):
-        occurances = match.group().count(current_placeholder)
-        padding = (len(current_placeholder) - len(new_placeholder)) * occurances
-        zeros = match.group().count(b"\0")
+        """
+        replace `current_placeholder` with `new_placeholder` and make sure the
+        resulting bytes have the same length (padded with \0)
+        """
         matchstr = match.group().rstrip(b"\0")
         result = matchstr.replace(current_placeholder, new_placeholder)
         result = result + b"\0" * (len(match.group()) - len(result))
         assert len(result) == len(match.group())
         return result
 
+    # find the string including all trailing \0s
     pat = re.compile(re.escape(current_placeholder) + b"([^\0]*?)\0+")
     res = pat.sub(replace, data)
 
