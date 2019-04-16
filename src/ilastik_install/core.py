@@ -18,6 +18,7 @@ class JsonConfig:
     json_specs: typing.Dict = dataclasses.field(init=False, repr=False)
 
     def __post_init__(self):
+        logger.debug(f"Reading json from {self.spec_path.as_posix()}.")
         with open(self.spec_path, "r") as f:
             self.json_specs = json.load(f)
 
@@ -51,7 +52,8 @@ def replace_prefixes(
             logger.info(f"modifying {fullpath}:{mode}")
             _constructor.update_prefix(
                 fullpath,
-                new_placeholder.as_posix(),
+                original_prefix,
                 current_placeholder.as_posix(),
+                new_placeholder.as_posix(),
                 mode,
             )

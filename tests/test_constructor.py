@@ -123,7 +123,9 @@ def generate_random_text(random_str_len: int) -> typing.List[str]:
     return random_data
 
 
-def random_text(random_str_len: int, current_prefix: str, occurrences: int) -> str:
+def random_text_w_prefix(
+    random_str_len: int, current_prefix: str, occurrences: int
+) -> str:
     text = generate_random_text(random_str_len)
     lines = random.sample(range(random_str_len), k=occurrences)
     for line in lines:
@@ -140,7 +142,7 @@ def test_update_prefix_text(new_prefix: str, occurrences: int, tmp_path: pathlib
     current_prefix = "something_random"
     original_prefix = "dontcare"
     random_str_len = 400
-    txt = random_text(random_str_len, current_prefix, occurrences)
+    txt = random_text_w_prefix(random_str_len, current_prefix, occurrences)
     txt_file = tmp_path / "txt-file.txt"
     with txt_file.open("w") as f:
         f.write(txt)
