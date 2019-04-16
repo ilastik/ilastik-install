@@ -2,9 +2,11 @@
 Test replacement operation.
 """
 from ilastik_install.external import _constructor
+import pathlib
 import pytest
 import random
 import re
+import string
 import typing
 
 
@@ -155,3 +157,83 @@ def test_multi_nested_replace(
     new_nested = current_nested.rstrip(b"\0").replace(current_prefix, new_prefix)
     new_nested = new_nested + b"\0" * (len(original_nested) - len(new_nested))
     assert res.count(zero_t(new_nested)) == 2
+
+
+@pytest.fixture
+def random_text() -> typing.Tuple[str, str]:
+    n_lines = 2000
+    prefix_count = 10
+    mean_line_lenght = 80
+    random_data = [
+        "".join(
+            random.choices(
+                string.ascii_letters,
+                k=max(0, round(random.normalvariate(mean_line_lenght, 20))),
+            )
+        )
+        for x in range(n_lines)
+    ]
+
+    current_prefix = "12345678"
+    lines = random.sample(range(n_lines), k=prefix_count)
+    for line in lines:
+        pos = random.randint(0, len(random_data[line]))
+        random_data[line] = (
+            random_data[line][0:pos] + current_prefix + random_data[line][pos::]
+        )
+
+    return current_prefix, "\n".join(random_data)
+
+
+@pytest.fixture
+def text_file(
+    tmp_path: pathlib.Path, random_text: str
+) -> typing.Tuple[str, pathlib.Path]:
+    txt_file = tmp_path / "textfile.txt"
+    with txt_file.open("w") as f:
+        prefix, text = random_text
+        f.write(text)
+    return prefix, txt_file
+
+
+@pytest.mark.parametrize("new_prefix", ["1234", "1234567", "1234567890abcderfgh"])
+def test_update_prefix_text(new_prefix: str, text_file):
+    original_prefix: str = "norealneed"
+    current_prefix, path = text_file
+    mode: str = "text"
+    _constructor.update_prefix(path, original_prefix, current_prefix, new_prefix, mode)
+
+    with path.open("r") as f:
+        txt_out = f.read()
+
+    assert txt_out.count(new_prefix) == 10
+
+
+@pytest.fixture
+def binary_file(
+    tmp_path: pathlib.Path, random_data: bytes
+) -> typing.Tuple[str, pathlib.Path]:
+    bin_file = tmp_path / "binfile.bin"
+    original_prefix = "123456789_max_length"
+    prefix = "whatever"
+    len_diff = len(original_prefix) - len(prefix)
+    bin_data = inserted_to_binary(
+        random_data, zero_t(prefix.encode("utf-8")) + b"\0" * len_diff, 100
+    )
+
+    with bin_file.open("wb") as f:
+        f.write(bin_data)
+    return prefix, bin_file
+
+
+@pytest.mark.parametrize("new_prefix", ["1234", "1234567", "1234567890abcderfgh1"])
+def test_update_prefix_text_binary(new_prefix, binary_file):
+    original_prefix: str = "123456789_max_length"
+    current_prefix, path = binary_file
+    mode: str = "binary"
+    _constructor.update_prefix(path, original_prefix, current_prefix, new_prefix, mode)
+
+    with path.open("rb") as f:
+        bin_out = f.read()
+
+    assert bin_out.count(new_prefix.encode("utf-8")) == 1

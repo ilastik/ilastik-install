@@ -71,7 +71,7 @@ def main():
     prefix_config = PrefixConfig(spec_file, args.root)
     logger.debug(prefix_config)
 
-    core.parse_conda_meta(
+    core.replace_prefixes(
         args.root / "conda-meta", args.root, prefix_config.prefix, args.root
     )
 

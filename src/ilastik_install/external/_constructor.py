@@ -72,7 +72,7 @@ class PlaceholderLenghtError(Exception):
 
 
 def binary_replace(
-    data,
+    data: bytes,
     original_placeholder: bytes,
     current_placeholder: bytes,
     new_placeholder: bytes,
@@ -120,7 +120,9 @@ def binary_replace(
     return res
 
 
-def update_prefix(path, new_prefix, placeholder, mode):
+def update_prefix(
+    path: str, original_prefix: str, current_prefix: str, new_prefix: str, mode: str
+):
     if on_win:
         # force all prefix replacements to forward slashes to simplify need
         # to escape backslashes - replace with unix-style path separators
@@ -130,15 +132,20 @@ def update_prefix(path, new_prefix, placeholder, mode):
     with open(path, "rb") as fi:
         data = fi.read()
     if mode == "text":
-        new_data = data.replace(placeholder.encode("utf-8"), new_prefix.encode("utf-8"))
+        new_data = data.replace(
+            current_prefix.encode("utf-8"), new_prefix.encode("utf-8")
+        )
     elif mode == "binary":
         if on_win:
-            # anaconda-verify will not allow binary placeholder on Windows.
+            # anaconda-verify will not allow binary current_prefix on Windows.
             # However, since some packages might be created wrong (and a
-            # binary placeholder would break the package, we just skip here.
+            # binary current_prefix would break the package, we just skip here.
             return
         new_data = binary_replace(
-            data, placeholder.encode("utf-8"), new_prefix.encode("utf-8")
+            data,
+            original_prefix.encode("utf-8"),
+            current_prefix.encode("utf-8"),
+            new_prefix.encode("utf-8"),
         )
     else:
         sys.exit("Invalid mode:" % mode)

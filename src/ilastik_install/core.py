@@ -42,6 +42,8 @@ def replace_prefixes(
         for file_spec in pkg_spec.file_iter:
             fullpath = root / file_spec["_path"]
             mode = file_spec["file_mode"]
+            # used to determine the length:
+            original_prefix = file_spec["prefix_placeholder"]
 
             if not fullpath.exists():
                 logger.warning(f"Could not find {fullpath.as_posix()}")
