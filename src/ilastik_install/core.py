@@ -47,7 +47,7 @@ def replace_prefixes(
             original_prefix = file_spec["prefix_placeholder"]
 
             if not fullpath.exists():
-                logger.warning(f"Could not find {fullpath.as_posix()}")
+                logger.warning(f"Could not find {fullpath.as_posix()}. ignoring.")
                 continue
             logger.info(f"modifying {fullpath}:{mode}")
             _constructor.update_prefix(
