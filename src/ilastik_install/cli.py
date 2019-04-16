@@ -3,6 +3,8 @@ from argparse import ArgumentParser, Namespace
 import logging
 from ilastik_install import core
 import dataclasses
+import json
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -51,12 +53,41 @@ def parse_args() -> Namespace:
     return args
 
 
-def main():
-    logging.basicConfig(
-        level=logging.DEBUG, format="%(asctime)s %(name)s-%(levelname)s: %(message)s"
-    )
-    args = parse_args()
+def setup_logging():
+    logger.setLevel(logging.DEBUG)
+    log_formatter = logging.Formatter("%(asctime)s %(name)s-%(levelname)s: %(message)s")
+    file_handler = logging.FileHandler("relocate.log")
+    file_handler.setFormatter(log_formatter)
+    file_handler.setLevel(logging.DEBUG)
+    logger.addHandler(file_handler)
+    stdout_handler = logging.StreamHandler()
+    stdout_handler.setFormatter(log_formatter)
+    stdout_handler.setLevel(logging.INFO)
+    logger.addHandler(stdout_handler)
+    logger.debug("----------Starting relocation--------")
 
+
+def update_prefix_file(file_path: pathlib.Path, curren_prefix: str):
+    logger.debug(f"updating prefix file {file_path.as_posix()} with {curren_prefix}")
+    with file_path.open("w") as f:
+        json.dump({"previous_prefix": curren_prefix.as_posix()}, f)
+
+
+def excepthook(exception_type, exception_value, exception_traceback):
+    logger.exception(
+        "An unexpected error occurred. Your installation might be corrupt!",
+        exc_info=exception_value,
+    )
+    return
+
+
+sys.excepthook = excepthook
+
+
+def main():
+    setup_logging()
+    args = parse_args()
+    args.root = args.root.resolve()
     spec_file = ".prefix_previous"
     if args.override_prefix_file != "":
         logger.warning(
@@ -67,13 +98,16 @@ def main():
     spec_file = args.root / spec_file
     if not spec_file.exists():
         logger.error(f"Could not find spec file at {spec_file}")
+        sys.exit(1)
 
+    logger.debug(f"trying {spec_file}")
     prefix_config = PrefixConfig(spec_file, args.root)
     logger.debug(prefix_config)
 
-    core.parse_conda_meta(
+    core.replace_prefixes(
         args.root / "conda-meta", args.root, prefix_config.prefix, args.root
     )
+    update_prefix_file(spec_file, args.root)
 
 
 if __name__ == "__main__":

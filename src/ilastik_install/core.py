@@ -18,6 +18,7 @@ class JsonConfig:
     json_specs: typing.Dict = dataclasses.field(init=False, repr=False)
 
     def __post_init__(self):
+        logger.debug(f"Reading json from {self.spec_path.as_posix()}.")
         with open(self.spec_path, "r") as f:
             self.json_specs = json.load(f)
 
@@ -30,7 +31,7 @@ class PackageSpec(JsonConfig):
                 yield file_spec
 
 
-def parse_conda_meta(
+def replace_prefixes(
     conda_meta_path: pathlib.Path,
     root: pathlib.Path,
     current_placeholder: str,
@@ -42,14 +43,17 @@ def parse_conda_meta(
         for file_spec in pkg_spec.file_iter:
             fullpath = root / file_spec["_path"]
             mode = file_spec["file_mode"]
+            # used to determine the length:
+            original_prefix = file_spec["prefix_placeholder"]
 
             if not fullpath.exists():
-                logger.warning(f"Could not find {fullpath.as_posix()}")
+                logger.warning(f"Could not find {fullpath.as_posix()}. ignoring.")
                 continue
             logger.info(f"modifying {fullpath}:{mode}")
             _constructor.update_prefix(
                 fullpath,
-                new_placeholder.as_posix(),
+                original_prefix,
                 current_placeholder.as_posix(),
+                new_placeholder.as_posix(),
                 mode,
             )

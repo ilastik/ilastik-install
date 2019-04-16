@@ -67,27 +67,62 @@ class PaddingError(Exception):
     pass
 
 
-def binary_replace(data, a, b):
+class PlaceholderLenghtError(Exception):
+    pass
+
+
+def binary_replace(
+    data: bytes,
+    original_placeholder: bytes,
+    current_placeholder: bytes,
+    new_placeholder: bytes,
+):
     """
-    Perform a binary replacement of `data`, where the placeholder `a` is
-    replaced with `b` and the remaining string is padded with null characters.
+    Perform a binary replacement of `data`, where the placeholder
+    `current_placeholder` is replaced with `new_placeholder` (terminated with a
+    single b"\0) and the remaining string is kept untouched.
+    `new_placeholder` may not be longer than `original_placeholder`.
     All input arguments are expected to be bytes objects.
+    |-----------------------original placeholder-----------------|somestring?|0|
+    |--------current placeholder--------|somestring?|00000000000000000000000000|
+    |------------new placeholder--------------|somestr?|00000000000000000000000|
     """
+    if len(new_placeholder) > len(original_placeholder):
+        raise PlaceholderLenghtError(
+            f"New placeholder longer (lenght: {len(new_placeholder)}) than "
+            f"old placholder (length: {len(original_placeholder)}).",
+            original_placeholder,
+            new_placeholder,
+        )
+    # sanity checks!
+    padding_current = len(original_placeholder) - len(current_placeholder)
+    padding_new = len(original_placeholder) - len(current_placeholder)
+    assert padding_current >= 0
+    assert padding_new >= 0
 
     def replace(match):
-        occurances = match.group().count(a)
-        padding = (len(a) - len(b)) * occurances
-        if padding < 0:
-            raise PaddingError(a, b, padding)
-        return match.group().replace(a, b) + b"\0" * padding
+        """
+        replace `current_placeholder` with `new_placeholder` and make sure the
+        resulting bytes have the same length (padded with \0)
+        """
+        matchstr = match.group().rstrip(b"\0")
+        result = matchstr.replace(current_placeholder, new_placeholder)
+        result = result + b"\0" * (len(match.group()) - len(result))
+        assert len(result) == len(match.group())
+        return result
 
-    pat = re.compile(re.escape(a) + b"([^\0]*?)\0")
+    # find the string including all trailing \0s
+    pat = re.compile(re.escape(current_placeholder) + b"([^\0]*?)\0+")
     res = pat.sub(replace, data)
+
+    assert new_placeholder in res
     assert len(res) == len(data)
     return res
 
 
-def update_prefix(path, new_prefix, placeholder, mode):
+def update_prefix(
+    path: str, original_prefix: str, current_prefix: str, new_prefix: str, mode: str
+):
     if on_win:
         # force all prefix replacements to forward slashes to simplify need
         # to escape backslashes - replace with unix-style path separators
@@ -97,15 +132,20 @@ def update_prefix(path, new_prefix, placeholder, mode):
     with open(path, "rb") as fi:
         data = fi.read()
     if mode == "text":
-        new_data = data.replace(placeholder.encode("utf-8"), new_prefix.encode("utf-8"))
+        new_data = data.replace(
+            current_prefix.encode("utf-8"), new_prefix.encode("utf-8")
+        )
     elif mode == "binary":
         if on_win:
-            # anaconda-verify will not allow binary placeholder on Windows.
+            # anaconda-verify will not allow binary current_prefix on Windows.
             # However, since some packages might be created wrong (and a
-            # binary placeholder would break the package, we just skip here.
+            # binary current_prefix would break the package, we just skip here.
             return
         new_data = binary_replace(
-            data, placeholder.encode("utf-8"), new_prefix.encode("utf-8")
+            data,
+            original_prefix.encode("utf-8"),
+            current_prefix.encode("utf-8"),
+            new_prefix.encode("utf-8"),
         )
     else:
         sys.exit("Invalid mode:" % mode)
